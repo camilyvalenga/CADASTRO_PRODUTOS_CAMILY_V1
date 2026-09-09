@@ -1,4 +1,3 @@
-
 *{
     box-sizing: border-box;
     margin: 0;
@@ -83,7 +82,7 @@ button{
     color: white;
 }
 
-.btn-danger.btn-primary:hover{
+.btn-danger:hover{
     background-color: #b91c1c;
 }
 
@@ -108,7 +107,7 @@ table{
 }
 
 th,td{
-    border: px solid #cbd5e1;
+    border: 1px solid #cbd5e1; /* Corrigido de 'border: px' para '1px' */
     padding: 10px;
     text-align: center;
 }

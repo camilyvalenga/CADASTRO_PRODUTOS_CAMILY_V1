@@ -20,21 +20,22 @@
             </div>
             
             <div class="form-group">
-                <label for="nome">Preço (R$):</label>
-                <input type="number" id="preco" step="0.01" placeholder="Ex. 3500.00" requared>
+                <label for="preco">Preço (R$):</label>
+                <!-- Ajustado de requared para required -->
+                <input type="number" id="preco" step="0.01" placeholder="Ex. 3500.00" required>
             </div>
             
             <div class="form-group">
-                <label for="nome">Quantidade:</label>
+                <label for="quantidade">Quantidade:</label>
                 <input type="number" id="quantidade" placeholder="Ex. 5" required>
             </div>
             
             <button type="submit" class="btn-primary">Adicionar Produto</button>
         </form>
-        <!-- Cabesalio de aações e resumo -->
+        <!-- Cabecalho de acoes e resumo -->
         <div class="resumo-container">
-            
-            <h3 id="limpar-estoque">Total em Estoque: R$0,00</h3>
+            <!-- Ajustado o ID de limpar-estoque para total-estoque conforme pedido no Desafio 2 -->
+            <h3 id="total-estoque">Total em Estoque: R$0,00</h3>
             <button id="limpar-tabela" class="btn-danger">Limpar Tudo</button>
         </div>
         
@@ -55,9 +56,7 @@
         </table>
     </div>
         
-        <script src="script.js"></script>
-        
-        
+    <script src="script.js"></script>
 </body>
 
 </html>
