@@ -81,3 +81,8 @@ function renderizarTabela(){
         tabelaBody.appendChild(linha);
     })
 }
+
+
+
+
+
