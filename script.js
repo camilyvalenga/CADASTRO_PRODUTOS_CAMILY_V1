@@ -1,161 +1,135 @@
-//
-// FASE 1: Modelagem dos dados (Classe Base)
-//
-class Produto {
-    constructor(nome, preco, quantidade) {
-        this.nome = nome;
-        this.preco = parseFloat(preco);
-        this.quantidade = parseInt(quantidade);
+class Tarefa {
+    constructor(descricao) {
+        if (descricao.trim() === "") {
+            throw new Error("A descrição da tarefa não pode estar em branco.");
+        }
+        this.descricao = descricao;
+        this.concluida = false;
     }
 
-    // Método que calcula o subtotal do produto
-    calcularSubtotal() {
-        return this.preco * this.quantidade;
+    alternarStatus() {
+        this.concluida = !this.concluida;
     }
 }
 
-//
-// FASE 2: Gerenciamento de Estado (Memória)
-//
-const listaDeProdutos = [];
+const listaDeTarefas = [];
 
-//
-// 🆕 FASE 2.1: Persistência com localStorage
-//
-// Definimos uma constante para evitar erros de digitação ao usar a chave do localStorage
-const CHAVE_STORAGE = "sistema_estoque_produtos";
+// Persistência com localStorage
+const CHAVE_STORAGE = "sistema_lista_tarefas";
 
-// 1. Função para SALVAR os dados no navegador
 function salvarNoLocalStorage() {
-    // JSON.stringify converte o Array de Objetos JS em uma String JSON
-    const listaEmTexto = JSON.stringify(listaDeProdutos);
+    const listaEmTexto = JSON.stringify(listaDeTarefas);
     localStorage.setItem(CHAVE_STORAGE, listaEmTexto);
 }
 
-// 2. Função para CARREGAR os dados salvos quando a página abrir
 function carregarDoLocalStorage() {
     const dadosSalvos = localStorage.getItem(CHAVE_STORAGE);
 
-    // Se existirem dados salvos anteriormente no navegador...
     if (dadosSalvos) {
-        // Converte a string JSON de volta para um Array de objetos genéricos
-        const produtosObjetos = JSON.parse(dadosSalvos);
+        const tarefasObjetos = JSON.parse(dadosSalvos);
 
-        // ATENÇÃO (Conceito POO): Reinstanciamos cada produto com "new Produto()"
-        // para garantir que os objetos recuperem o método .calcularSubtotal()
-        produtosObjetos.forEach((prod) => {
-            const produtoInstanciado = new Produto(prod.nome, prod.preco, prod.quantidade);
-            listaDeProdutos.push(produtoInstanciado);
+        tarefasObjetos.forEach((t) => {
+            const tarefaInstanciada = new Tarefa(t.descricao);
+            tarefaInstanciada.concluida = t.concluida;
+            listaDeTarefas.push(tarefaInstanciada);
         });
     }
 }
 
-//
-// FASE 3: Captura de Elementos do DOM
-//
-const formProduto = document.getElementById("produto-form");
-const btnLimparTudo = document.getElementById("limpar-tabela");
-const totalEstoqueEl = document.getElementById("total-estoque");
+const botaoAdicionar = document.getElementById("botao-adicionar");
+const campoTarefa = document.getElementById("campo-tarefa");
 
-//
-// FASE 4: Escuta de Eventos
-//
+botaoAdicionar.addEventListener("click", adicionarNovaTarefa);
 
-// 1. Adicionar Produto pelo Formulário
-formProduto.addEventListener("submit", function (event) {
-    event.preventDefault();
-
-    const nomeInput = document.getElementById("nome").value;
-    const precoInput = document.getElementById("preco").value;
-    const quantidadeInput = document.getElementById("quantidade").value;
-
-    const novoProduto = new Produto(nomeInput, precoInput, quantidadeInput);
-
-    listaDeProdutos.push(novoProduto);
-
-    // 🆕 Salva no localStorage sempre que um novo produto for adicionado
-    salvarNoLocalStorage();
-
-    atualizarInterface();
-    formProduto.reset();
-});
-
-// 2. Limpar toda a tabela
-btnLimparTudo.addEventListener("click", function () {
-    if (listaDeProdutos.length === 0) {
-        alert("A tabela já está vazia!");
-        return;
-    }
-
-    if (confirm("Tem certeza que deseja remover todos os produtos?")) {
-        listaDeProdutos.length = 0;
-
-        // 🆕 Remove a chave inteira do localStorage
-        localStorage.removeItem(CHAVE_STORAGE);
-
-        atualizarInterface();
+campoTarefa.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+        adicionarNovaTarefa();
     }
 });
 
-//
-// FASE 5: Funções de Atualização e Renderização da Interface
-//
+function adicionarNovaTarefa() {
+    const descricaoInput = campoTarefa.value;
 
-// Função responsável por remover um único produto pelo índice
-function removerProduto(index) {
-    listaDeProdutos.splice(index, 1);
-
-    // 🆕 Salva a nova lista (sem o item removido) no localStorage
-    salvarNoLocalStorage();
-
-    atualizarInterface();
+    try {
+        const novaTarefa = new Tarefa(descricaoInput);
+        listaDeTarefas.push(novaTarefa);
+        
+        salvarNoLocalStorage(); // Salva no localStorage sempre que uma nova tarefa for adicionada
+        
+        renderizarLista();
+        campoTarefa.value = "";
+        campoTarefa.focus();
+    } catch (erro) {
+        alert(erro.message);
+    }
 }
 
-// Função responsável por calcular e renderizar o total geral em estoque
-function atualizarTotalEstoque() {
-    const total = listaDeProdutos.reduce((acc, produto) => {
-        return acc + produto.calcularSubtotal();
-    }, 0);
+function renderizarLista() {
+    const listaUl = document.getElementById("lista-tarefas");
+    listaUl.innerHTML = "";
 
-    totalEstoqueEl.textContent = `Total em Estoque: R$ ${total.toFixed(2)}`;
-}
+    listaDeTarefas.forEach((tarefa, index) => {
+        const itemLista = document.createElement("li");
+        itemLista.className = "item-tarefa";
 
-// Função responsável por re-desenhar a tabela
-function renderizarTabela() {
-    const tabelaBody = document.querySelector("#tabela-produtos tbody");
+        if (tarefa.concluida) {
+            itemLista.classList.add("concluido");
+        }
 
-    tabelaBody.innerHTML = "";
-
-    listaDeProdutos.forEach((produto, index) => {
-        const linha = document.createElement("tr");
-
-        linha.innerHTML = `
-            <td>${produto.nome}</td>
-            <td>R$ ${produto.preco.toFixed(2)}</td>
-            <td>${produto.quantidade}</td>
-            <td>R$ ${produto.calcularSubtotal().toFixed(2)}</td>
-            <td>
-                <button class="btn-remover">Remover</button>
-            </td>
+        itemLista.innerHTML = `
+            <span class="texto-tarefa" onclick="alternarConclusao(${index})">${tarefa.descricao}</span>
+            <div class="acoes-tarefa">
+                <button class="botao-acao" onclick="alternarConclusao(${index})">
+                    <i class="fa-regular ${tarefa.concluida ? 'fa-circle-check' : 'fa-circle'}"></i>
+                </button>
+                <button class="botao-acao excluir" onclick="removerTarefa(${index})">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
         `;
 
-        const btnRemover = linha.querySelector(".btn-remover");
-        btnRemover.addEventListener("click", () => removerProduto(index));
-
-        tabelaBody.appendChild(linha);
+        listaUl.appendChild(itemLista);
     });
+
+    atualizarContador();
 }
 
-// Função principal que sincroniza a tela com os dados
-function atualizarInterface() {
-    renderizarTabela();
-    atualizarTotalEstoque();
+function atualizarContador() {
+    const contadorElemento = document.getElementById("contador-tarefas");
+    const total = listaDeTarefas.length;
+
+    if (total === 1) {
+        contadorElemento.textContent = "1 tarefa na lista";
+    } else {
+        contadorElemento.textContent = `${total} tarefas na lista`;
+    }
 }
 
-//
-// 🆕 FASE 6: Inicialização da Aplicação
-//
-// Ao carregar o script pela primeira vez, restaura os dados do localStorage
-// e atualiza a interface gráfica.
+function alternarConclusao(index) {
+    listaDeTarefas[index].alternarStatus();
+    salvarNoLocalStorage(); // Salva após alterar o status
+    renderizarLista();
+}
+
+function removerTarefa(index) {
+    listaDeTarefas.splice(index, 1);
+    salvarNoLocalStorage(); // Salva a nova lista após remover
+    renderizarLista();
+}
+
+const botaoTema = document.getElementById("botao-alterar-tema");
+
+botaoTema.addEventListener("click", () => {
+    document.body.classList.toggle("modo-escuro");
+
+    const icone = botaoTema.querySelector("i");
+    if (document.body.classList.contains("modo-escuro")) {
+        icone.className = "fa-solid fa-sun";
+    } else {
+        icone.className = "fa-solid fa-moon";
+    }
+});
+
+// Inicialização: Restaura os dados do localStorage e renderiza a tela ao abrir
 carregarDoLocalStorage();
-atualizarInterface();
+renderizarLista();
